@@ -15,6 +15,7 @@ use crate::io;
 use crate::profile;
 use crate::scriptengine;
 use crate::time_summary;
+use crate::types::InstallCrate;
 use crate::types::{
     CliArgs, Config, CrateInfo, EnvFile, EnvInfo, EnvValue, EnvValueConditioned, EnvValueDecode,
     EnvValuePathGlob, EnvValueScript, PackageInfo, ScriptValue, Step, Task, Workspace,
@@ -777,6 +778,22 @@ pub(crate) fn get_project_root() -> Option<String> {
     }
 }
 
+fn expand_env_for_install_crate_version_info(task: &mut Task) {
+    match &mut task.install_crate {
+        Some(InstallCrate::CrateInfo(ref mut install_crate_info)) => {
+            if let Some(version_string) = &install_crate_info.version {
+                install_crate_info.version = Some(expand_value(&version_string));
+            }
+
+            if let Some(min_version_string) = &install_crate_info.min_version {
+                install_crate_info.min_version = Some(expand_value(&min_version_string));
+            }
+        }
+
+        _ => {}
+    }
+}
+
 fn expand_env_for_script_runner_arguments(task: &mut Task) {
     let updated_args = match task.script_runner_args {
         Some(ref args) => {
@@ -852,6 +869,7 @@ pub(crate) fn expand_env(step: &Step) -> Step {
     //update args by replacing any env vars
     expand_env_for_arguments(&mut config);
     expand_env_for_script_runner_arguments(&mut config);
+    expand_env_for_install_crate_version_info(&mut config);
 
     Step {
         name: step.name.clone(),

@@ -1,6 +1,6 @@
 use super::*;
 
-use crate::types::{ConfigSection, EnvFileInfo, EnvValueUnset, Task, TaskCondition};
+use crate::types::{ConfigSection, EnvFileInfo, EnvValueUnset, Task, TaskCondition, InstallCrateInfo, InstallCrate, TestArg};
 use indexmap::IndexMap;
 use std::collections::HashMap;
 use std::env;
@@ -1765,6 +1765,78 @@ fn expand_env_with_env_vars_and_task_args() {
     assert_eq!(args[6], "-o=targ2".to_string());
     assert_eq!(args[7], "-o=targ3".to_string());
     assert_eq!(args[8], "-o=targ4".to_string());
+}
+
+#[test]
+#[ignore]
+fn expand_env_with_install_crate_min_version() {
+    envmnt::set("RUST_SCRIPT_MIN_VERSION", "0.25.0");
+
+    let mut task = Task::new();
+    task.install_crate = Some(InstallCrate::CrateInfo(InstallCrateInfo{
+        crate_name: "rust-script".to_string(),
+        rustup_component_name: None,
+        binary: "rust-script".to_string(),
+        test_arg: TestArg {
+            inner: vec!["--version".to_string()],
+        },
+        min_version: Some("${RUST_SCRIPT_MIN_VERSION}".to_string()),
+        version: None,
+        install_command: None,
+        force: None,
+    }));
+
+    let step = Step {
+        name: "test".to_string(),
+        config: task,
+    };
+    let updated_step = expand_env(&step);
+
+    assert_eq!(updated_step.name, "test".to_string());
+
+    let crate_info_variant = updated_step.config.install_crate.unwrap();
+    assert!(matches!(crate_info_variant, InstallCrate::CrateInfo(InstallCrateInfo{..})));
+
+    if let InstallCrate::CrateInfo(install_crate_info) = crate_info_variant {
+        assert_eq!(install_crate_info.min_version.unwrap(), "0.25.0".to_string());
+    };
+
+}
+
+#[test]
+#[ignore]
+fn expand_env_with_install_crate_version() {
+    envmnt::set("RUST_SCRIPT_VERSION", "0.25.0");
+
+    let mut task = Task::new();
+    task.install_crate = Some(InstallCrate::CrateInfo(InstallCrateInfo{
+        crate_name: "rust-script".to_string(),
+        rustup_component_name: None,
+        binary: "rust-script".to_string(),
+        test_arg: TestArg {
+            inner: vec!["--version".to_string()],
+        },
+        min_version: None,
+        version: Some("${RUST_SCRIPT_VERSION}".to_string()),
+        install_command: None,
+        force: None,
+    }));
+
+    let step = Step {
+        name: "test".to_string(),
+        config: task,
+    };
+    let updated_step = expand_env(&step);
+
+    assert_eq!(updated_step.name, "test".to_string());
+
+    let crate_info_variant = updated_step.config.install_crate.unwrap();
+    assert!(matches!(crate_info_variant, InstallCrate::CrateInfo(InstallCrateInfo{..})));
+
+    if let InstallCrate::CrateInfo(install_crate_info) = crate_info_variant {
+        assert_eq!(install_crate_info.version.unwrap(), "0.25.0".to_string());
+    };
+
 }
 
 #[test]
