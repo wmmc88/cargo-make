@@ -1016,6 +1016,7 @@ fn run_task_rust_script_with_args_and_rust_condition_script_with_args() {
                 r##"#!@rust
 #![allow(unused_doc_comments)]
 
+println!("Hello, world! condition");
 let base_path = std::env::var("RUST_SCRIPT_BASE_PATH").expect("RUST_SCRIPT_BASE_PATH should always be set by rust-script");
 std::fs::write(r#"{}"#, base_path)?
                 "##,
@@ -1031,6 +1032,7 @@ std::fs::write(r#"{}"#, base_path)?
                 r##"#!@rust
 #![allow(unused_doc_comments)]
 
+println!("Hello, world!");
 let base_path = std::env::var("RUST_SCRIPT_BASE_PATH").expect("RUST_SCRIPT_BASE_PATH should always be set by rust-script");
 std::fs::write(r#"{}"#, base_path)?
             "##,
@@ -1047,11 +1049,13 @@ std::fs::write(r#"{}"#, base_path)?
     // Check that condition_script_args are expanded
     let condition_script_output = fs::read_to_string(&condition_script_output_file)
         .expect("condition_script should have created this file");
-    assert_eq!(condition_script_output, dummy_path);
 
     // Check that script_args are expanded
     let script_output =
         fs::read_to_string(&script_output_file).expect("script should have created this file");
+
+    dbg!(&condition_script_output, &script_output);
+    assert_eq!(condition_script_output, dummy_path);
     assert_eq!(script_output, dummy_path);
 }
 
