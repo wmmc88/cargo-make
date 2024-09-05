@@ -170,7 +170,7 @@ pub(crate) fn run_command_get_output(
     capture_output: bool,
 ) -> io::Result<Output> {
     let ctrl_c_handling = UnstableFeature::CtrlCHandling.is_env_set();
-    let silent = is_silent();
+    let silent = false;
 
     debug!("Execute Command: {}", &command_string);
     let mut command = Command::new(&command_string);
@@ -184,7 +184,7 @@ pub(crate) fn run_command_get_output(
 
     command.stdin(Stdio::inherit());
 
-    if silent {
+    if dbg!(silent) {
         command.stdout(Stdio::null()).stderr(Stdio::null());
     } else if ctrl_c_handling {
         if capture_output {
@@ -194,7 +194,7 @@ pub(crate) fn run_command_get_output(
         command.stdout(Stdio::inherit()).stderr(Stdio::inherit());
     }
 
-    info!("Execute Command: {:?}", &command);
+    println!("Execute Command: {:?}", &command);
 
     let output = if ctrl_c_handling {
         spawn_command(command)
@@ -202,7 +202,7 @@ pub(crate) fn run_command_get_output(
         command.output()
     };
 
-    debug!("Output: {:#?}", &output);
+    println!("Output: {:#?}", &output);
 
     output
 }
@@ -267,7 +267,7 @@ pub(crate) fn run_command(
     args: &Option<Vec<String>>,
     validate: bool,
 ) -> Result<i32, CargoMakeError> {
-    let output = run_command_get_output(&command_string, &args, false);
+    let output = run_command_get_output(&command_string, &args, true);
 
     let exit_code = get_exit_code_from_output(&output, !validate);
 

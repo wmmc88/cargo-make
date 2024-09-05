@@ -90,6 +90,8 @@ fn run_file(
         ScriptRunner::CargoPlay => (true, "play"),
     };
 
+    dbg!(use_cargo, command);
+
     let mut args = vec![];
     if use_cargo {
         args.push(command.to_string());
@@ -118,6 +120,8 @@ pub(crate) fn execute(
     validate: bool,
 ) -> Result<bool, CargoMakeError> {
     let provider = get_script_runner();
+
+    dbg!(&provider, &rust_script, &runner_arguments, &cli_arguments, &validate);
 
     install_crate(&provider)?;
 
